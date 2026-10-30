@@ -26,11 +26,11 @@ using System;using System.Drawing;using System.Windows.Forms;
 public class ScreenSelect : Form {
  public Rectangle Selection=Rectangle.Empty; Point start; bool dragging=false;
  public ScreenSelect(){FormBorderStyle=FormBorderStyle.None;ShowInTaskbar=false;TopMost=true;Cursor=Cursors.Cross;DoubleBuffered=true;KeyPreview=true;BackColor=Color.Black;Opacity=.20;var bounds=SystemInformation.VirtualScreen;StartPosition=FormStartPosition.Manual;Location=bounds.Location;Size=bounds.Size;
- MouseDown+=(s,e)=>{if(e.Button==MouseButtons.Left){start=e.Location;dragging=true;}};
+ MouseDown+=(s,e)=>{if(e.Button==MouseButtons.Left){start=Cursor.Position;dragging=true;}};
  MouseMove+=(s,e)=>{if(dragging)Invalidate();};
- MouseUp+=(s,e)=>{if(dragging){dragging=false;int x=Math.Min(start.X,e.X),y=Math.Min(start.Y,e.Y),w=Math.Abs(start.X-e.X),h=Math.Abs(start.Y-e.Y);if(w>1&&h>1){var origin=PointToScreen(new Point(x,y));Selection=new Rectangle(origin.X,origin.Y,w,h);DialogResult=DialogResult.OK;}else DialogResult=DialogResult.Cancel;Close();}};
+ MouseUp+=(s,e)=>{if(dragging){dragging=false;var end=Cursor.Position;int x=Math.Min(start.X,end.X),y=Math.Min(start.Y,end.Y),w=Math.Abs(start.X-end.X),h=Math.Abs(start.Y-end.Y);if(w>1&&h>1){Selection=new Rectangle(x,y,w,h);DialogResult=DialogResult.OK;}else DialogResult=DialogResult.Cancel;Close();}};
  KeyDown+=(s,e)=>{if(e.KeyCode==Keys.Escape){DialogResult=DialogResult.Cancel;Close();}};}
- protected override void OnPaint(PaintEventArgs e){base.OnPaint(e);if(dragging){var m=PointToClient(Cursor.Position);var r=Rectangle.FromLTRB(Math.Min(start.X,m.X),Math.Min(start.Y,m.Y),Math.Max(start.X,m.X),Math.Max(start.Y,m.Y));using(var p=new Pen(Color.White,2))e.Graphics.DrawRectangle(p,r);}}
+ protected override void OnPaint(PaintEventArgs e){base.OnPaint(e);if(dragging){var a=PointToClient(start);var m=PointToClient(Cursor.Position);var r=Rectangle.FromLTRB(Math.Min(a.X,m.X),Math.Min(a.Y,m.Y),Math.Max(a.X,m.X),Math.Max(a.Y,m.Y));using(var p=new Pen(Color.White,2))e.Graphics.DrawRectangle(p,r);}}
 }
 '@
 $form=[ScreenSelect]::new();try{if($form.ShowDialog() -ne [Windows.Forms.DialogResult]::OK){OutJson @{cancelled=$true};exit 0};$rect=$form.Selection}finally{$form.Dispose()}
