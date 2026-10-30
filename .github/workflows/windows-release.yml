@@ -18,6 +18,9 @@ jobs:
         run: flutter create --platforms=windows --project-name snipandextract .
       - name: Get packages
         run: flutter pub get
+      - name: Remove generated template test
+        shell: pwsh
+        run: Remove-Item test/widget_test.dart -ErrorAction SilentlyContinue
       - name: Analyse Dart
         run: flutter analyze
       - name: Build Windows
