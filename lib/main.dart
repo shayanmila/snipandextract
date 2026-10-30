@@ -124,10 +124,12 @@ class _SnipHomeState extends State<SnipHome> {
     setState(() { busy = true; status = 'Recognising text offline…'; });
     try {
       final r = await invoke('ocr', {'image': base64Encode(image!)});
-      if (mounted) setState(() {
+      if (mounted) {
+        setState(() {
         textController.text = (r['text'] ?? '').toString();
         status = textController.text.trim().isEmpty ? 'No text detected' : 'Text extracted';
-      });
+        });
+      }
     } catch (e) {
       if (mounted) setState(() => status = 'OCR failed: $e');
     } finally {
