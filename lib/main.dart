@@ -92,7 +92,7 @@ class _SnipHomeState extends State<SnipHome> {
   }
 
   Future<void> save() async {
-    if (image == null || busy) return;
+    if (image == null || busy) { return; }
     final f = await getSaveLocation(
       suggestedName: 'Snip_${DateTime.now().millisecondsSinceEpoch}.png',
       acceptedTypeGroups: [const XTypeGroup(label: 'PNG image', extensions: ['png'])],
@@ -136,7 +136,7 @@ class _SnipHomeState extends State<SnipHome> {
   }
 
   Future<void> copyText() async {
-    if (textController.text.trim().isEmpty) return;
+    if (textController.text.trim().isEmpty) { return; }
     await Clipboard.setData(ClipboardData(text: textController.text));
     if (mounted) setState(() => status = 'Text copied');
   }
