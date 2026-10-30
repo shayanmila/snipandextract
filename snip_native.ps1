@@ -1,5 +1,22 @@
 param([ValidateSet('capture','ocr','copyImage')][string]$Action,[string]$Payload)
 $ErrorActionPreference='Stop'
+# Use physical pixels for both the selection overlay and screen capture.
+# DPI awareness must be enabled before Windows Forms creates a window.
+if ($Action -eq 'capture') {
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class CaptureDpi {
+ [DllImport("user32.dll")] public static extern bool SetProcessDpiAwarenessContext(IntPtr context);
+ [DllImport("user32.dll")] public static extern bool SetProcessDPIAware();
+}
+'@
+try {
+  if (-not [CaptureDpi]::SetProcessDpiAwarenessContext([IntPtr](-4))) {
+    [void][CaptureDpi]::SetProcessDPIAware()
+  }
+} catch { [void][CaptureDpi]::SetProcessDPIAware() }
+}
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 function OutJson($obj){[Console]::Out.WriteLine(($obj|ConvertTo-Json -Compress -Depth 5))}
@@ -11,7 +28,7 @@ public class ScreenSelect : Form {
  public ScreenSelect(){FormBorderStyle=FormBorderStyle.None;ShowInTaskbar=false;TopMost=true;Cursor=Cursors.Cross;DoubleBuffered=true;KeyPreview=true;BackColor=Color.Black;Opacity=.20;var bounds=SystemInformation.VirtualScreen;StartPosition=FormStartPosition.Manual;Location=bounds.Location;Size=bounds.Size;
  MouseDown+=(s,e)=>{if(e.Button==MouseButtons.Left){start=e.Location;dragging=true;}};
  MouseMove+=(s,e)=>{if(dragging)Invalidate();};
- MouseUp+=(s,e)=>{if(dragging){dragging=false;int x=Math.Min(start.X,e.X),y=Math.Min(start.Y,e.Y),w=Math.Abs(start.X-e.X),h=Math.Abs(start.Y-e.Y);if(w>1&&h>1){Selection=new Rectangle(x+Left,y+Top,w,h);DialogResult=DialogResult.OK;}else DialogResult=DialogResult.Cancel;Close();}};
+ MouseUp+=(s,e)=>{if(dragging){dragging=false;int x=Math.Min(start.X,e.X),y=Math.Min(start.Y,e.Y),w=Math.Abs(start.X-e.X),h=Math.Abs(start.Y-e.Y);if(w>1&&h>1){var origin=PointToScreen(new Point(x,y));Selection=new Rectangle(origin.X,origin.Y,w,h);DialogResult=DialogResult.OK;}else DialogResult=DialogResult.Cancel;Close();}};
  KeyDown+=(s,e)=>{if(e.KeyCode==Keys.Escape){DialogResult=DialogResult.Cancel;Close();}};}
  protected override void OnPaint(PaintEventArgs e){base.OnPaint(e);if(dragging){var m=PointToClient(Cursor.Position);var r=Rectangle.FromLTRB(Math.Min(start.X,m.X),Math.Min(start.Y,m.Y),Math.Max(start.X,m.X),Math.Max(start.Y,m.Y));using(var p=new Pen(Color.White,2))e.Graphics.DrawRectangle(p,r);}}
 }
