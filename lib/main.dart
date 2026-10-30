@@ -28,9 +28,10 @@ class SnipApp extends StatelessWidget {
     debugShowCheckedModeBanner: false,
     title: 'Snip & Extract',
     theme: ThemeData(
-      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xff5266dc)),
+      colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xff087e83)),
       useMaterial3: true,
       visualDensity: VisualDensity.compact,
+      scaffoldBackgroundColor: const Color(0xfff5f8f9),
     ),
     home: const SnipHome(),
   );
@@ -199,7 +200,14 @@ class _SnipHomeState extends State<SnipHome> {
       child: Scaffold(
         appBar: AppBar(
           toolbarHeight: 44,
-          title: const Text('Snip & Extract', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+          title: const Row(mainAxisSize: MainAxisSize.min, children: [
+            Icon(Icons.crop_square_rounded, color: Color(0xff087e83), size: 24),
+            SizedBox(width: 9),
+            Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+              Text('SNIP / EXTRACT', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, letterSpacing: 1.2)),
+              Text('CAPTURE STUDIO', style: TextStyle(fontSize: 9, letterSpacing: 2, color: Color(0xff607780))),
+            ]),
+          ]),
           actions: [
             IconButton(tooltip: 'Keyboard shortcuts (F1)', onPressed: () => setState(() => helpOpen = !helpOpen), icon: const Icon(Icons.keyboard_outlined)),
           ],
@@ -208,7 +216,7 @@ class _SnipHomeState extends State<SnipHome> {
           final sideBySide = helpOpen && constraints.maxWidth >= 650;
           return Row(children: [
             Expanded(child: Padding(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -223,14 +231,24 @@ class _SnipHomeState extends State<SnipHome> {
                   ]),
                 ),
                 const SizedBox(height: 6),
-                Text(status, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12)),
+                Row(children: [
+                  const Icon(Icons.circle, size: 8, color: Color(0xff00a58a)),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(status, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: Color(0xff44616b)))),
+                ]),
                 const SizedBox(height: 6),
                 Expanded(flex: 3, child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(14),
                   child: Container(
-                    color: const Color(0xfff1f2f5),
+                    color: const Color(0xffe8f0f2),
                     child: image == null
-                      ? const Center(child: Text('Screenshot preview'))
+                      ? const Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+                          Icon(Icons.center_focus_strong_outlined, size: 48, color: Color(0xff5e9398)),
+                          SizedBox(height: 10),
+                          Text('YOUR CAPTURE APPEARS HERE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.2, color: Color(0xff52727b))),
+                          SizedBox(height: 5),
+                          Text('Select New Snip to begin', style: TextStyle(fontSize: 11, color: Color(0xff779097))),
+                        ]))
                       : InteractiveViewer(child: Center(child: Image.memory(image!, fit: BoxFit.contain))),
                   ),
                 )),

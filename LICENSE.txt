@@ -1,0 +1,13 @@
+Snip & Extract - End User Licence Agreement
+
+Copyright (c) 2026 MasoomDev.
+
+This software is provided for personal and business use as-is, without warranties of any kind to the extent permitted by applicable law.
+
+You may install and use the software on computers you own or are authorised to use. You must not misrepresent the software's origin or use it to infringe the rights or privacy of others.
+
+The software captures only areas you select and processes text using Windows facilities. You are responsible for the content you capture.
+
+To uninstall, use Windows Installed Apps or the Uninstall Snip & Extract entry.
+
+By installing, you agree to these terms.

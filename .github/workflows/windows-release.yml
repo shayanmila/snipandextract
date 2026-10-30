@@ -16,6 +16,9 @@ jobs:
           channel: stable
       - name: Generate Windows platform files
         run: flutter create --platforms=windows --project-name snipandextract .
+      - name: Generate branded Windows icon
+        shell: pwsh
+        run: ./generate_icon.ps1
       - name: Get packages
         run: flutter pub get
       - name: Remove generated template test
@@ -30,14 +33,29 @@ jobs:
         run: Copy-Item snip_native.ps1 build/windows/x64/runner/Release/snip_native.ps1
       - name: Package portable ZIP
         shell: pwsh
-        run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath SnipAndExtract-Windows.zip
-      - name: Upload artifact
+        run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath SnipAndExtract-Portable-Windows.zip
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --yes --no-progress
+      - name: Build Windows installer
+        shell: pwsh
+        run: |
+          $compiler = "${env:ProgramFiles(x86)}\\Inno Setup 6\\ISCC.exe"
+          if (-not (Test-Path $compiler)) { throw "Inno Setup compiler not found at $compiler" }
+          & $compiler installer.iss
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed: $LASTEXITCODE" }
+      - name: Upload portable and installer
         uses: actions/upload-artifact@v4
         with:
           name: SnipAndExtract-Windows
-          path: SnipAndExtract-Windows.zip
-      - name: Publish GitHub release for tags
+          path: |
+            SnipAndExtract-Portable-Windows.zip
+            installer-output/SnipAndExtract-Setup-Windows.exe
+          if-no-files-found: error
+      - name: Publish release assets for tags
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${{ github.ref_name }}" SnipAndExtract-Windows.zip --title "Snip & Extract ${{ github.ref_name }}" --generate-notes
+        shell: pwsh
+        run: |
+          gh release create "${{ github.ref_name }}" SnipAndExtract-Portable-Windows.zip installer-output/SnipAndExtract-Setup-Windows.exe --title "Snip & Extract ${{ github.ref_name }}" --generate-notes
