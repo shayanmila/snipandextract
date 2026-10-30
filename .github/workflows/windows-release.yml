@@ -1,0 +1,40 @@
+name: Windows Release
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+permissions:
+  contents: write
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Generate Windows platform files
+        run: flutter create --platforms=windows --project-name snipandextract .
+      - name: Get packages
+        run: flutter pub get
+      - name: Analyse Dart
+        run: flutter analyze
+      - name: Build Windows
+        run: flutter build windows --release
+      - name: Add native bridge
+        shell: pwsh
+        run: Copy-Item snip_native.ps1 build/windows/x64/runner/Release/snip_native.ps1
+      - name: Package portable ZIP
+        shell: pwsh
+        run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath SnipAndExtract-Windows.zip
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SnipAndExtract-Windows
+          path: SnipAndExtract-Windows.zip
+      - name: Publish GitHub release for tags
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ github.ref_name }}" SnipAndExtract-Windows.zip --title "Snip & Extract ${{ github.ref_name }}" --generate-notes
