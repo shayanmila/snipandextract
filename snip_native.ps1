@@ -1,4 +1,4 @@
-param([ValidateSet('capture','ocr','copyImage')][string]$Action,[string]$Payload)
+param([ValidateSet('capture','ocr','copyImage')][string]$Action,[string]$Payload,[string]$PayloadFile)
 $ErrorActionPreference='Stop'
 # Use physical pixels for both the selection overlay and screen capture.
 # DPI awareness must be enabled before Windows Forms creates a window.
@@ -37,7 +37,14 @@ $form=[ScreenSelect]::new();try{if($form.ShowDialog() -ne [Windows.Forms.DialogR
 Start-Sleep -Milliseconds 200
 $bmp=[Drawing.Bitmap]::new($rect.Width,$rect.Height);try{$gfx=[Drawing.Graphics]::FromImage($bmp);try{$gfx.CopyFromScreen($rect.Location,[Drawing.Point]::Empty,$rect.Size)}finally{$gfx.Dispose()};$ms=[IO.MemoryStream]::new();try{$bmp.Save($ms,[Drawing.Imaging.ImageFormat]::Png);OutJson @{image=[Convert]::ToBase64String($ms.ToArray());width=$rect.Width;height=$rect.Height}}finally{$ms.Dispose()}}finally{$bmp.Dispose()};exit 0
 }
-$data=ConvertFrom-Json ([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($Payload)))
+if ($PayloadFile) {
+  if (-not [IO.File]::Exists($PayloadFile)) { throw "Payload file not found" }
+  $data = ConvertFrom-Json ([IO.File]::ReadAllText($PayloadFile, [Text.Encoding]::UTF8))
+} elseif ($Payload) {
+  $data = ConvertFrom-Json ([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($Payload)))
+} else {
+  throw 'No payload supplied'
+}
 if($Action -eq 'copyImage'){$bytes=[Convert]::FromBase64String($data.image);$stream=[IO.MemoryStream]::new($bytes);$bmp=[Drawing.Bitmap]::new($stream);try{[Windows.Forms.Clipboard]::SetImage($bmp);OutJson @{ok=$true}}finally{$bmp.Dispose();$stream.Dispose()};exit 0}
 if($Action -eq 'ocr'){
 Add-Type -AssemblyName System.Runtime.WindowsRuntime
