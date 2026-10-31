@@ -12,11 +12,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh api -H "Accept: application/vnd.github+json" /repos/${{ github.repository }}/actions/artifacts/12997376246/zip > artifact.zip
+          gh api -H "Accept: application/vnd.github+json" /repos/${{ github.repository }}/actions/artifacts/13036990006/zip > artifact.zip
           unzip -o artifact.zip -d extracted
           test -s extracted/installer-output/SnipAndExtract-Setup-Windows.exe
       - name: Publish installer only to GitHub Releases
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create v1.0.1 extracted/installer-output/SnipAndExtract-Setup-Windows.exe --repo "${{ github.repository }}" --target "${{ github.sha }}" --title "Snip & Extract v1.0.1 — Screenshot Capture & OCR for Windows" --notes "Windows installer for Snip & Extract. Capture selected screen areas, copy screenshots, save PNG images, and extract text with Windows OCR. Includes compact responsive UI and keyboard shortcut help."
+          gh release upload v1.0.2 extracted/installer-output/SnipAndExtract-Setup-Windows.exe --repo "${{ github.repository }}" --clobber
