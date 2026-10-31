@@ -55,11 +55,26 @@ class _SnipHomeState extends State<SnipHome> {
     if (!await script.exists()) {
       throw Exception('Native helper not found: ${script.path}');
     }
-    final p = await Process.run('powershell.exe', [
-      '-NoProfile', '-NonInteractive', '-Sta', '-ExecutionPolicy', 'Bypass',
-      '-File', script.path, '-Action', action,
-      if (data != null) ...['-Payload', base64Encode(utf8.encode(jsonEncode(data)))],
-    ]);
+    // Send large screenshot payloads via a temporary file rather than Windows
+    // process arguments (which have a command-line length limit).
+    File? payloadFile;
+    ProcessResult p;
+    try {
+      if (data != null) {
+        final dir = await Directory.systemTemp.createTemp('snip_extract_');
+        payloadFile = File('${dir.path}\\payload.json');
+        await payloadFile.writeAsString(jsonEncode(data), flush: true);
+      }
+      p = await Process.run('powershell.exe', [
+        '-NoProfile', '-NonInteractive', '-Sta', '-ExecutionPolicy', 'Bypass',
+        '-File', script.path, '-Action', action,
+        if (payloadFile != null) ...['-PayloadFile', payloadFile.path],
+      ]);
+    } finally {
+      if (payloadFile != null) {
+        try { await payloadFile.parent.delete(recursive: true); } catch (_) {}
+      }
+    }
     if (p.exitCode != 0) {
       throw Exception(p.stderr.toString().trim().isEmpty ? p.stdout : p.stderr);
     }
